@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas RyC - UNAD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a1929 0%, #003366 50%, #005599 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(253, 185, 36, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Login Modal */
+        .login-overlay {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 25, 41, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            padding: 50px 40px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            text-align: center;
+            animation: slideUp 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF6B35 0%, #FDB924 100%);
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-box h2 {
+            color: #003366;
+            margin-bottom: 8px;
+            font-size: 2.2em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .login-box p {
+            color: #64748b;
+            margin-bottom: 35px;
+            font-size: 1.05em;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #FF6B35;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FF6B35 0%, #FDB924 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #ef4444;
+            margin-top: 15px;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        /* Dashboard */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: none;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 35px 40px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header h1 {
+            color: #003366;
+            font-size: 2.2em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logout-btn {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-btn:active {
+            transform: translateY(0);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #FF6B35 0%, #FDB924 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            color: #003366;
+            font-size: 3em;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #003366 0%, #005599 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .chart-card:hover {
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .chart-card h2 {
+            color: #003366;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-item {
+            margin-bottom: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .chart-item:hover {
+            transform: translateX(5px);
+        }
+
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .chart-bar {
+            height: 36px;
+            background: linear-gradient(135deg, #FF6B35 0%, #FDB924 100%);
+            border-radius: 8px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.3) 50%, 
+                transparent 100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .chart-item:hover .chart-bar {
+            transform: scaleY(1.1);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .data-table {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .data-table h2 {
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #003366 0%, #005599 100%);
+            color: white;
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th:first-child {
+            border-radius: 12px 0 0 0;
+        }
+
+        th:last-child {
+            border-radius: 0 12px 0 0;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+            font-size: 0.95em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: linear-gradient(90deg, 
+                rgba(255, 107, 53, 0.05) 0%, 
+                rgba(253, 185, 36, 0.05) 100%);
+            transform: scale(1.01);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.3em;
+            color: white;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 25px;
+            }
+
+            .stat-value {
+                font-size: 2.5em;
+            }
+
+            .chart-card, .data-table {
+                padding: 25px;
+            }
+
+            .login-box {
+                padding: 35px 25px;
+            }
+
+            table {
+                font-size: 0.85em;
+            }
+
+            th, td {
+                padding: 12px 15px;
+            }
+        }
+
+        /* Animación de carga */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .stat-card.loading .stat-value {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div class="login-overlay" id="loginModal">
+        <div class="login-box">
+            <h2>🔐 Acceso Restringido</h2>
+            <p>Panel de Estadísticas RyC - UNAD</p>
+            <form id="loginForm">
+                <input 
+                    type="text" 
+                    id="usernameInput" 
+                    class="login-input" 
+                    placeholder="Usuario"
+                    required
+                    autocomplete="username"
+                >
+                <input 
+                    type="password" 
+                    id="passwordInput" 
+                    class="login-input" 
+                    placeholder="Contrasena"
+                    required
+                    autocomplete="current-password"
+                >
+                <button type="submit" class="login-btn">Acceder</button>
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="container" id="dashboard">
+        <div class="header">
+            <h1>📊 Panel de Estadísticas RyC</h1>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+
+        <!-- Resumen General -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <h3>Total Visitas</h3>
+                <div class="stat-value" id="totalVisitas">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Estudiantes</h3>
+                <div class="stat-value" id="totalEstudiantes">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Aspirantes</h3>
+                <div class="stat-value" id="totalAspirantes">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Egresados</h3>
+                <div class="stat-value" id="totalEgresados">-</div>
+            </div>
+        </div>
+
+        <!-- Gráfico: Distribución por Rol -->
+        <div class="chart-card">
+            <h2>👥 Distribución por Tipo de Usuario</h2>
+            <div id="rolesChart"></div>
+        </div>
+
+        <!-- Gráfico: Países -->
+        <div class="chart-card">
+            <h2>  Top 10 Países</h2>
+            <div id="paisesChart"></div>
+        </div>
+
+        <!-- Gráfico: Navegadores -->
+        <div class="chart-card">
+            <h2>🌐 Navegadores</h2>
+            <div id="navegadoresChart"></div>
+        </div>
+
+        <!-- Gráfico: Dispositivos -->
+        <div class="chart-card">
+            <h2>📱 Dispositivos</h2>
+            <div id="dispositivosChart"></div>
+        </div>
+
+        <!-- Gráfico: Sistemas Operativos -->
+        <div class="chart-card">
+            <h2>  Sistemas Operativos</h2>
+            <div id="sistemasChart"></div>
+        </div>
+
+        <!-- Tabla: Últimas Visitas -->
+        <div class="data-table">
+            <h2 style="margin-bottom: 20px; color: #003366;">📋 Últimas 20 Visitas</h2>
+            <table id="visitasTable">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Rol</th>
+                        <th>País</th>
+                        <th>Navegador</th>
+                        <th>Dispositivo</th>
+                        <th>SO</th>
+                        <th>Tiempo (seg)</th>
+                    </tr>
+                </thead>
+                <tbody id="visitasTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar Supabase
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://sdbarzmllsdtfstcpkjp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkYmFyem1sbHNkdGZzdGNwa2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5ODk3MDgsImV4cCI6MjA3NjU2NTcwOH0.xZicbmnNbjvB9I0O6mFgmastZUBcq57sGkz76_mLM64';
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Manejo del login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const loginBtn = e.target.querySelector('.login-btn');
+
+            // Deshabilitar botón mientras valida
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Validando...';
+            errorMessage.textContent = '';
+
+
+            try {
+                // Consultar tabla administradores
+                const { data, error } = await supabase
+                    .from('administradores')
+                    .select('*')
+                    .eq('usuario', username)
+                    .eq('contrasena', password)
+                    .single();
+
+                if (error || !data) {
+                    errorMessage.textContent = '❌ Usuario o contrasena incorrectos';
+                    document.getElementById('usernameInput').value = '';
+                    document.getElementById('passwordInput').value = '';
+                    document.getElementById('usernameInput').focus();
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Acceder';
+                    return;
+                }
+
+                // Login exitoso
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('dashboard').classList.add('active');
+                sessionStorage.setItem('admin_auth', 'true');
+                sessionStorage.setItem('admin_user', data.usuario);
+                loadStatistics();
+
+            } catch (err) {
+                console.error('Error en login:', err);
+                errorMessage.textContent = '❌ Error al validar credenciales';
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Acceder';
+            }
+        });
+
+        // Verificar si ya está autenticado
+        if (sessionStorage.getItem('admin_auth') === 'true') {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            loadStatistics();
+        }
+
+        // Logout
+        window.logout = function() {
+            sessionStorage.removeItem('admin_auth');
+            location.reload();
+        };
+
+        // Cargar estadísticas
+        async function loadStatistics() {
+            try {
+                // Obtener todas las visitas
+                const { data: visitas, error } = await supabase
+                    .from('visitas')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Calcular estadísticas generales
+                const totalVisitas = visitas.length;
+                const totalEstudiantes = visitas.filter(v => v.rol === 'Estudiante').length;
+                const totalAspirantes = visitas.filter(v => v.rol === 'Aspirante').length;
+                const totalEgresados = visitas.filter(v => v.rol === 'Egresado').length;
+
+                // Actualizar tarjetas
+                document.getElementById('totalVisitas').textContent = totalVisitas;
+                document.getElementById('totalEstudiantes').textContent = totalEstudiantes;
+                document.getElementById('totalAspirantes').textContent = totalAspirantes;
+                document.getElementById('totalEgresados').textContent = totalEgresados;
+
+                // Distribución por Rol
+                const roles = {
+                    'Estudiante': totalEstudiantes,
+                    'Aspirante': totalAspirantes,
+                    'Egresado': totalEgresados
+                };
+                renderChart('rolesChart', roles);
+
+                // Top Países
+                const paises = {};
+                visitas.forEach(v => {
+                    if (v.pais) {
+                        paises[v.pais] = (paises[v.pais] || 0) + 1;
+                    }
+                });
+                renderChart('paisesChart', paises, 10);
+
+                // Navegadores
+                const navegadores = {};
+                visitas.forEach(v => {
+                    if (v.navegador) {
+                        navegadores[v.navegador] = (navegadores[v.navegador] || 0) + 1;
+                    }
+                });
+                renderChart('navegadoresChart', navegadores);
+
+                // Dispositivos
+                const dispositivos = {};
+                visitas.forEach(v => {
+                    if (v.dispositivo) {
+                        dispositivos[v.dispositivo] = (dispositivos[v.dispositivo] || 0) + 1;
+                    }
+                });
+                renderChart('dispositivosChart', dispositivos);
+
+                // Sistemas Operativos
+                const sistemas = {};
+                visitas.forEach(v => {
+                    if (v.sistema_operativo) {
+                        sistemas[v.sistema_operativo] = (sistemas[v.sistema_operativo] || 0) + 1;
+                    }
+                });
+                renderChart('sistemasChart', sistemas);
+
+                // Tabla de últimas visitas
+                renderTable(visitas.slice(0, 20));
+
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+                alert('Error al cargar estadísticas');
+            }
+        }
+
+        // Renderizar gráfico de barras
+        function renderChart(containerId, data, limit = null) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            // Ordenar y limitar
+            const sorted = Object.entries(data)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, limit || Object.keys(data).length);
+
+            const max = Math.max(...sorted.map(([_, count]) => count));
+
+            sorted.forEach(([label, count]) => {
+                const percentage = (count / max) * 100;
+                
+                const item = document.createElement('div');
+                item.className = 'chart-item';
+                item.innerHTML = `
+                    <div class="chart-label">
+                        <span>${label}</span>
+                        <span><strong>${count}</strong></span>
+                    </div>
+                    <div style="background: #e0e0e0; border-radius: 5px; overflow: hidden;">
+                        <div class="chart-bar" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Renderizar tabla
+        function renderTable(visitas) {
+            const tbody = document.getElementById('visitasTableBody');
+            tbody.innerHTML = '';
+
+            visitas.forEach(visita => {
+                const fecha = new Date(visita.created_at).toLocaleString('es-ES');
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${fecha}</td>
+                    <td>${visita.rol || '-'}</td>
+                    <td>${visita.pais || '-'}</td>
+                    <td>${visita.navegador || '-'}</td>
+                    <td>${visita.dispositivo || '-'}</td>
+                    <td>${visita.sistema_operativo || '-'}</td>
+                    <td>${visita.tiempo_permanencia || '0'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Auto-refresh cada 30 segundos
+        setInterval(() => {
+            if (sessionStorage.getItem('admin_auth') === 'true') {
+                loadStatistics();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
